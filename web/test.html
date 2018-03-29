@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+
+    <script language="javascript" type="text/javascript">
+        var websocket = null;
+        /***
+         * settings : {
+         *      url: <url du ws, non obligatoire>,
+         *      userid: <>
+         *      onMessage:function(message)
+         * }
+         * @param settings
+         */
+        function initializeWzNotifier(settings){
+            var url = settings.url || "ws://localhost:8088/notifier/websocket";
+
+            websocket = new WebSocket(url);
+
+            websocket.onopen = function(evt) {
+                console.log("Connected");
+                websocket.send(JSON.stringify({"userid": settings.user.userid, "entityid": settings.user.entityid}));
+            };
+
+            websocket.onmessage = function(evt) {
+                var message=evt.data;
+                var data=JSON.parse(message);
+                if (settings.onMessage)
+                    settings.onMessage(data);
+            };
+
+            websocket.onerror = function(evt) {
+                if (settings.onError)
+                    settings.onError(evt);
+            };
+
+        }
+
+        function init() {
+            initializeWzNotifier({
+                user: {userid: "45", entityid: "5"}, onMessage: function (data) {
+                    console.log(data)
+                }, onError: function (evt) {
+                    console.error(evt);
+                }
+            });
+        }
+        window.addEventListener("load", init, false);
+        window.addEventListener("unload", function (evt) {
+            websocket.close();
+        }, false);
+    </script>
+</head>
+<body>
+
+</body>
+</html>

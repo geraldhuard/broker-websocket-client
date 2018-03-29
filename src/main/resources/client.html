@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+
+    <script language="javascript" type="text/javascript">
+        var websocket = null;
+        /***
+         * settings : {
+         *      url: <url du ws, non obligatoire>,
+         *      userid: <>
+         *      onMessage:function(message)
+         * }
+         * @param settings
+         */
+        function initializeNotifier(settings){
+            var url = settings.url || "ws://localhost:8080/notifier/websock";
+
+            websocket = new WebSocket(url);
+
+            websocket.onopen = function(evt) {
+                log("Connected");
+                websocket.send(JSON.stringify({"userid": settings.user.userid, "orderid": settings.user.orderid}));
+            };
+
+            websocket.onmessage = function(evt) {
+                var message=evt.data;
+                var data=JSON.parse(message);
+                if (settings.onMessage)
+                    settings.onMessage(data);
+            };
+
+            websocket.onerror = function(evt) {
+                if (settings.onError)
+                    settings.onError(evt);
+            };
+
+        }
+
+        function init() {
+            initializeNotifier({
+                user: {userid: "1", orderid: "2"},
+
+                onMessage: function (data) {
+                    log(data, "message received : ");
+
+                }, onError: function (evt) {
+                    log(evt);
+                }
+            });
+        }
+
+        function log(message, prefix){
+            console.log(message);
+            if (prefix){
+                message=prefix + JSON.stringify(message);
+            }
+            document.getElementById("console").innerHTML = document.getElementById("console").innerHTML + "\n" + message;
+        }
+
+
+        window.addEventListener("load", init, false);
+        window.addEventListener("unload", function (evt) {
+            websocket.close();
+        }, false);
+    </script>
+</head>
+<body>
+
+<pre id="console"></pre>
+
+</body>
+</html>
